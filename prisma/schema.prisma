@@ -6,6 +6,88 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int           @id @default(autoincrement())
+  name            String?       @unique
+  email           String        @unique
+  mobile          String        @unique
+  password        String
+  confirmPassword String        @map("confirm_password")
+  profileImage    String?       @map("profile_image")
+  isAdmin         Boolean       @default(false)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamp(0)
+  deposit         Deposit[]
+  wallet          Wallet[]
+  transaction     Transaction[]
+
+  @@map("users")
+}
+
+model Deposit {
+  id        Int      @id @default(autoincrement())
+  image     String
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+
+  @@map("deposits")
+}
+
+model Wallet {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique @db.VarChar(20)
+  amountBaht Decimal      @map("amount_baht") @db.Decimal(12, 2)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamp(0)
+  user       User         @relation(fields: [userId], references: [id])
+  userId     Int
+  coinWallet CoinWallet[]
+
+  @@map("wallets")
+}
+
+model Coin {
+  id          Int           @id @default(autoincrement())
+  symbol      String        @unique
+  name        String        @unique
+  transaction Transaction[]
+  coinWallet  CoinWallet[]
+
+  @@map("coins")
+}
+
+enum Status {
+  BUY
+  SELL
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  amount    Decimal
+  price     Decimal
+  status    Status
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  coin      Coin     @relation(fields: [coinId], references: [id])
+  coinId    Int
+
+  @@map("transactions")
+}
+
+model CoinWallet {
+  id       Int     @id @default(autoincrement())
+  amount   Decimal
+  coin     Coin    @relation(fields: [coinId], references: [id])
+  coinId   Int
+  wallet   Wallet  @relation(fields: [walletId], references: [id])
+  walletId Int
+
+  @@map("coin_wallets")
 }

@@ -1,0 +1,117 @@
+### Authentication ###
+POST /auth/register     register a new user
+REQUEST BODY
+{
+    email*              String      email address
+    mobile*             String      mobile number
+    password*           String      password must contain only alphabet
+    confirmPassword*    String      confirm password must match a password
+}
+RESPONSE
+201
+    {
+        accessToken     String      user token
+        newUser            object      user object without password
+    }
+400
+    {
+        message         String      client error message
+    }
+500
+    {
+        message         String      server error message
+    }
+
+POST /auth/login        login
+REQUEST BODY
+{
+    emailOrMobile*      String      email address or mobile number
+    password*           String      user password
+}
+RESPONSE
+200
+    {
+        accessToken     String      user token
+        newUser            object      user object without password
+    }
+400
+    {
+        message         String      client error message
+    }
+500
+    {
+        message         String      server error message
+    }
+
+GET /auth/me        get authenticated user data
+HEADER
+    AUTHORIZATUIN   BEARER [JWT]
+RESPONSE
+200 { user: { id, firstName, lastName, email, mobile, profileImage, coverImage, createdAt, updatedAt } }
+401 { message: 'unauthenticated' }
+500 { message: 'internal server error' }
+
+PATCH /users        update user profile
+HEADER
+    AUTHORIZATUIN   BEARER [JWT]
+REQUEST BODY        multipart/form-data
+    profileImage    user profile image
+    coverImage      user cover image
+RESPONSE
+    200 { profileImage: 'https://, coverImage: 'https://' }
+    400 { message: 'unexpected field' }
+    401 { message: 'unauthenticated' }
+    500 { message: 'internal server error' }
+
+GET /user/:targetUserId/profile
+HEADER
+    AUTHORIZATION       Bearer [JWT]
+RESPONSE
+    200 { profileUser: 'profileUserFriend', relationshipToAuthUser }
+    400 { message: 'unexpected field' }
+    401 { message: 'unauthenticated' }
+    500 { message: 'internal server error' }
+
+POST    /relationship/users/:targetUserId               request new friend
+PATCH   /relationship/users/:targetUserId/confirm       accept request
+PATCH   /relationship/users/:targetUserId/reject        reject request
+PATCH   /relationship/users/:targetUserId/cancel        cancel request
+PATCH   /relationship/users/:targetUserId/unfriend      unfriend
+HEADER
+    AUTHORIZATION       Bearer [JWT]
+REQUEST BODY
+    targetUserId
+RESPONSE
+    200 { message: 'success request' }
+    400 { message: 'invalid relationship between two users' }
+    401 { message: 'unauthenticated' }
+    403 { message: 'cannot accept your request'}
+    500 { message: 'internal server error' }
+
+POST /posts         Create a new post 
+HEADER
+    AUTHORIZATION   Bearer [JWT]
+REQUEST BOY         multipart/form-data
+    title?          String (at least one of title or image)
+    image?          blob (at least one of title or image)
+RESPONSE
+    201 { post: new post object }
+    400 { message: 'invalid input' }
+    401 { message: 'unzuthenticated' }
+    500 { message: 'internal server error }
+
+GET /posts/friends      Get my post and friend's post
+HEADER
+    AUTHORIZATION   Bearer [JWT]
+RESPONSE
+    200 { posts: [ post object ] }
+    401 { message: 'unzuthenticated' }
+    500 { message: 'internal server error }
+
+POST /posts/:postId/likes       Create like
+HEADER
+    AUTHORIZATION   Bearer [JWT]
+RESPONSE
+    200 { message: 'liked laew ja' }
+    401 { message: 'unzuthenticated' }
+    500 { message: 'internal server error }

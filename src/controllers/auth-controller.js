@@ -37,12 +37,12 @@ exports.login = catchError(async (req, res, next) => {
     }
     const accessToken = jwt.sign(req.body, process.env.SECRETKEY, { expiresIn: '3h' })
     const loginUser = req.body
+    loginUser.name = findUser.name
     delete loginUser.password
     res.status(201).json({ accessToken, user: loginUser })
 })
 
 exports.getMe = catchError(async (req, res, next) => {
-    console.log(req.headers);
     const authorization = req.headers.authorization
     if (!authorization || !authorization.startsWith('Bearer')) {
         createError('invalid authorization header', 401)

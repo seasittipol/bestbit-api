@@ -11,7 +11,7 @@ RESPONSE
 201
     {
         accessToken     String      user token
-        newUser            object      user object without password
+        newUser         object      user object without password
     }
 400
     {
@@ -32,7 +32,7 @@ RESPONSE
 200
     {
         accessToken     String      user token
-        newUser            object      user object without password
+        newUser         object      user object without password
     }
 400
     {

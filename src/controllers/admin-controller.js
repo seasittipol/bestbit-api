@@ -27,8 +27,11 @@ exports.updateCoin = async (req, res, next) => {
 
 // delete: body symbol*
 exports.deleteCoin = async (req, res, next) => {
-    const symbol = req.body.symbol
-    const { id } = await prisma.coin.findFirst({ where: { symbol } })
-    const response = await prisma.coin.delete({ where: { id } })
-    res.status(200).json('delete ', response.symbol)
+    console.log(req.body);
+    const response = await prisma.coin.findFirst({ where: req.body })
+    if (!response) {
+        return res.status(401).json('invalid coin name')
+    }
+    const response2 = await prisma.coin.delete({ where: { id: response.id } })
+    res.status(200).json(response2)
 }

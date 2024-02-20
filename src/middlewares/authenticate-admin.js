@@ -12,7 +12,7 @@ const authenticateAdmin = async (req, res, next) => {
     const user = await prisma.user.findFirst({
         where: { email: decodePayload.email }
     })
-    console.log(user);
+    // console.log(user);
     if (!user) {
         createError('not found this user', 401)
     }

@@ -115,3 +115,5 @@ RESPONSE
     200 { message: 'liked laew ja' }
     401 { message: 'unzuthenticated' }
     500 { message: 'internal server error }
+
+PATCH /users/:userId

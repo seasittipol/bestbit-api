@@ -9,4 +9,15 @@ router.patch('/',
     userController.updateUserById
 )
 
+router.patch('/deposit',
+    upload.fields([{ name: 'depositImage', maxCount: 1 }]),
+    userController.depositById
+)
+
+router.get('/transaction', userController.getTransaction)
+router.post('/spot-trade', userController.spotTrade)
+
+router.get('/wallet-balance', userController.getWalletByUserId)
+router.get('/wallet-coin', userController.getCoinWalletByUserId)
+
 module.exports = router

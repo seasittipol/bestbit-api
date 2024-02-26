@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken')
 const prisma = require('../model/prisma')
 const createError = require('../utils/create-error')
+const catchError = require('../utils/catch-error')
 
-const authenticate = async (req, res, next) => {
+const authenticate = catchError(async (req, res, next) => {
     const authorization = req.headers.authorization
     if (!authorization || !authorization.startsWith('Bearer')) {
         createError('invalid authorization header', 401)
@@ -19,6 +20,6 @@ const authenticate = async (req, res, next) => {
     delete user.confirmPassword
     req.user = user
     next()
-}
+})
 
 module.exports = authenticate

@@ -18,7 +18,6 @@ exports.register = catchError(async (req, res, next) => {
         createError('confirm is not match password', 401)
     }
     const hashed = await bcrypt.hash(req.body.password, 10)
-    console.log(hashed);
     // const accessToken = jwt.sign(req.body, process.env.SECRETKEY, { expiresIn: '1h' })
     const newUser = req.body
     const name = 'user' + Math.floor(((Math.random() * 8) + 1) * 1000000)

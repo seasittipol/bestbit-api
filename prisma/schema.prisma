@@ -42,7 +42,7 @@ model Deposit {
 model Wallet {
   id         Int          @id @default(autoincrement())
   name       String       @unique @db.VarChar(20)
-  amountBaht Decimal      @map("amount_baht") @db.Decimal(12, 2)
+  amountUsd  Decimal      @map("amount_usd") @db.Decimal(12, 2)
   createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamp(0)
   user       User         @relation(fields: [userId], references: [id])
@@ -56,6 +56,7 @@ model Coin {
   id          Int           @id @default(autoincrement())
   symbol      String        @unique
   name        String        @unique
+  iconImage   String        @map("icon_image")
   transaction Transaction[]
   coinWallet  CoinWallet[]
 

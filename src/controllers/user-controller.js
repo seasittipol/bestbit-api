@@ -9,21 +9,19 @@ const createError = require('../utils/create-error');
 // }
 
 exports.updateUserById = catchError(async (req, res, next) => {
-    console.log(req.files);
+    console.log(!!req.files);
     console.log(req.body);
 
     const data = {}
     if (req.files) {
-        console.log('upload1');
+        console.log(1);
         const { secure_url } = await cloudinary.uploader.upload(req.files.profileImage[0].path, { use_filename: true })
         data.profileImage = secure_url
         fs.unlink(req.files.profileImage[0].path)
 
         await prisma.user.update({ where: { id: +req.user.id }, data })
-        console.log('succsess');
         res.status(200).json(data)
     } else {
-        await prisma.user.findFirst({ where: { id: +req.user.id } })
         const response = await prisma.user.update({
             where: { id: +req.user.id },
             data: req.body
@@ -35,20 +33,21 @@ exports.updateUserById = catchError(async (req, res, next) => {
 })
 
 exports.depositById = catchError(async (req, res, next) => {
-    console.log(123, req.files);
-    console.log(123123, req.body['amount'])
-    console.log(123123123, req.user.id);
+    if (!req.body['amount']) {
+        createError('please pick amount for deposit', 401)
+    }
+    if (!req.files) {
+        createError('please enter your deposit image', 401)
+    }
+
     const data = { userId: +req.user.id }
     if (req.files && +req.body['amount'] > 999) {
         console.log('upload1');
         const { secure_url } = await cloudinary.uploader.upload(req.files.depositImage[0].path, { use_filename: true })
         data.image = secure_url
         fs.unlink(req.files.depositImage[0].path)
-
         data.amount = +req.body.amount
-
         const response = await prisma.deposit.create({ data })
-        console.log('succsess');
         return res.status(200).json(response)
     }
     res.status(401).json({ message: 'check image or input amount' })
@@ -72,21 +71,21 @@ exports.getTransaction = catchError(async (req, res, next) => {
     })
     res.status(200).json(response)
 })
-// add being transaction
+
 exports.spotTrade = catchError(async (req, res, next) => {
     const walletUser = await prisma.wallet.findFirst({ where: { userId: req.user.id } })
     const coin = await prisma.coin.findFirst({ where: { symbol: req.body.symbol } })
-    const currentMoney = walletUser.amountBaht
-    if (currentMoney > req.body.total && req.body.status === 'BUY') {
+    const currentMoney = walletUser.amountUsd
+    if (req.body.status === 'BUY') {
+        if (currentMoney < req.body.total) {
+            createError('not enough money', 401)
+        }
         const remainMoney = currentMoney - req.body.total
         await prisma.wallet.update({
             where: { id: walletUser.id },
-            data: { amountBaht: remainMoney }
+            data: { amountUsd: remainMoney }
         })
-        const data = {}
-        data.amount = req.body.amount
-        data.coinId = coin.id
-        data.walletId = walletUser.id
+
         const isCoinInWallet = await prisma.coinWallet.findFirst({
             where: {
                 AND: [
@@ -95,6 +94,12 @@ exports.spotTrade = catchError(async (req, res, next) => {
                 ]
             }
         })
+
+        const data = {}
+        data.amount = req.body.amount
+        data.coinId = coin.id
+        data.walletId = walletUser.id
+
         if (isCoinInWallet) {
             const sumAmountCoin = Number(isCoinInWallet.amount) + Number(req.body.amount)
             await prisma.coinWallet.update({
@@ -104,12 +109,13 @@ exports.spotTrade = catchError(async (req, res, next) => {
         } else {
             await prisma.coinWallet.create({ data })
         }
+
         delete data.walletId
         data.price = req.body.price
         data.status = req.body.status
         data.userId = req.user.id
-        const response2 = await prisma.transaction.create({ data })
-        return res.status(200).json(response2)
+        const response = await prisma.transaction.create({ data })
+        return res.status(200).json(response)
     }
 
     if (req.body.status === 'SELL') {
@@ -166,7 +172,7 @@ exports.spotTrade = catchError(async (req, res, next) => {
                 id: walletUser.id
             },
             data: {
-                amountBaht: Number(currentMoney) + Number(req.body.total)
+                amountUsd: Number(currentMoney) + Number(req.body.total)
             }
         })
 
@@ -180,12 +186,11 @@ exports.spotTrade = catchError(async (req, res, next) => {
 
         return res.status(200).json(response)
     }
-    res.status(400).json({ message: 'not enough money' })
+    createError('invalid order status', 401)
 })
 
 exports.getWalletByUserId = catchError(async (req, res, next) => {
     const walletUser = await prisma.wallet.findFirst({ where: { userId: req.user.id } })
-    console.log(1);
     res.status(200).json(walletUser)
 })
 
@@ -195,7 +200,7 @@ exports.getCoinWalletByUserId = catchError(async (req, res, next) => {
         where: { walletId: walletUser.id },
         include: {
             coin: {
-                select: { symbol: true, name: true }
+                select: { symbol: true, name: true, iconImage: true }
             },
             wallet: {
                 select: { name: true }
